@@ -134,11 +134,24 @@ function App() {
       <SafeAreaView style={backgroundStyle}>
         {/* Premium Header */}
         <View style={[styles.header, isDarkMode && styles.headerDark]}>
-          <Image
-            source={require('./src/assets/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <View style={styles.headerLeft}>
+            <Image
+              source={require('./src/assets/logo_icon.png')}
+              style={styles.logoIcon}
+              resizeMode="contain"
+            />
+          </View>
+          <TouchableOpacity 
+            style={[styles.searchBar, isDarkMode && styles.searchBarDark]}
+            onPress={() => setActiveTab('Explore')}>
+            <Text style={styles.searchIconEmoji}>🔍</Text>
+            <Text style={styles.searchPlaceholder}>Search destinations...</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerRight}>
+            <View style={styles.profileCircle}>
+              <Text style={styles.profileEmoji}>👤</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {renderContent()}
@@ -179,13 +192,14 @@ function App() {
 
 const styles = StyleSheet.create({
   header: {
-    height: 80,
+    height: 65,
     backgroundColor: '#FFFFFF',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
-    paddingTop: 10,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -197,9 +211,55 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     borderBottomColor: '#333333',
   },
-  logo: {
-    width: 180,
-    height: 50,
+  headerLeft: {
+    width: 45,
+    height: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    width: 40,
+    height: 40,
+  },
+  searchBar: {
+    flex: 1,
+    height: 45,
+    backgroundColor: '#F1F3F5',
+    borderRadius: 25,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginHorizontal: 12,
+  },
+  searchBarDark: {
+    backgroundColor: '#2D2D2D',
+  },
+  searchIconEmoji: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  searchPlaceholder: {
+    color: '#888888',
+    fontSize: 14,
+  },
+  headerRight: {
+    width: 45,
+    height: 45,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F1F3F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  profileEmoji: {
+    fontSize: 20,
   },
   heroContainer: {
     height: 300,
