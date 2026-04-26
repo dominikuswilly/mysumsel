@@ -15,12 +15,14 @@ import {
 import {
   SafeAreaProvider,
   SafeAreaView,
+  useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = React.useState('Home');
   const [searchQuery, setSearchQuery] = React.useState('');
   
@@ -198,13 +200,13 @@ function App() {
   };
 
   return (
-    <SafeAreaProvider>
+    <View style={backgroundStyle}>
       <StatusBar
         barStyle={isDarkMode ? 'light-content' : 'dark-content'}
         backgroundColor="transparent"
         translucent
       />
-      <SafeAreaView style={backgroundStyle}>
+      <SafeAreaView style={backgroundStyle} edges={['top', 'left', 'right']}>
         {/* Premium Header */}
         <View style={[styles.header, isDarkMode && styles.headerDark]}>
           <View style={styles.headerLeft}>
@@ -235,7 +237,14 @@ function App() {
         {renderContent()}
 
         {/* Bottom Navigation */}
-        <View style={[styles.bottomNav, isDarkMode && styles.bottomNavDark]}>
+        <View style={[
+          styles.bottomNav, 
+          isDarkMode && styles.bottomNavDark,
+          { 
+            height: 60 + (insets.bottom > 0 ? insets.bottom : 15), 
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 5 
+          }
+        ]}>
           {[
             { name: 'Home', icon: '🏠' },
             { name: 'Cities', icon: '🏙️' },
@@ -264,7 +273,7 @@ function App() {
           ))}
         </View>
       </SafeAreaView>
-    </SafeAreaProvider>
+    </View>
   );
 }
 
@@ -503,11 +512,9 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     flexDirection: 'row',
-    height: 75,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#EEEEEE',
-    paddingBottom: 15,
     elevation: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
