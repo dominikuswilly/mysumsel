@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Dimensions,
   TextInput,
+  Animated,
 } from 'react-native';
 import {
   SafeAreaProvider,
@@ -22,6 +23,38 @@ function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [activeTab, setActiveTab] = React.useState('Home');
   const [searchQuery, setSearchQuery] = React.useState('');
+  
+  // Carousel Logic
+  const [heroIndex, setHeroIndex] = React.useState(0);
+  const fadeAnim = React.useRef(new Animated.Value(1)).current;
+  
+  const heroImages = [
+    require('./src/assets/hero5.png'), // Ampera Night
+    require('./src/assets/hero1.png'), // Birds
+    require('./src/assets/hero2.png'), // Quran
+    require('./src/assets/hero3.png'), // Cave
+    require('./src/assets/hero4.png'), // Mount Dempo
+  ];
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      // Fade out
+      Animated.timing(fadeAnim, {
+        toValue: 0.7,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => {
+        setHeroIndex((prev) => (prev + 1) % heroImages.length);
+        // Fade in
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1000,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [fadeAnim, heroImages.length]);
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#121212' : '#F8F9FA',
@@ -37,46 +70,84 @@ function App() {
             style={backgroundStyle}
             showsVerticalScrollIndicator={false}>
             
-            {/* Hero Section */}
+            {/* Hero Section Carousel */}
             <View style={styles.heroContainer}>
-              <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1596402184320-417d717867cd?q=80&w=1000' }}
-                style={styles.heroImage}
+              <Animated.Image
+                source={heroImages[heroIndex]}
+                style={[styles.heroImage, { opacity: fadeAnim }]}
               />
               <View style={styles.heroOverlay}>
                 <Text style={styles.heroTitle}>Discover the Magic of</Text>
                 <Text style={styles.heroSubtitle}>SOUTH SUMATRA</Text>
-                <TouchableOpacity style={styles.exploreButton}>
+                <TouchableOpacity 
+                  style={styles.exploreButton}
+                  onPress={() => setActiveTab('Cities')}>
                   <Text style={styles.exploreButtonText}>Start Exploring</Text>
                 </TouchableOpacity>
+                
+                {/* Carousel Indicators */}
+                <View style={styles.indicatorContainer}>
+                  {heroImages.map((_, i) => (
+                    <View 
+                      key={i} 
+                      style={[
+                        styles.indicator, 
+                        heroIndex === i && styles.indicatorActive
+                      ]} 
+                    />
+                  ))}
+                </View>
               </View>
             </View>
 
-            {/* Categories */}
-            <View style={styles.section}>
-              <Text style={[styles.sectionTitle, isDarkMode && styles.textWhite]}>Categories</Text>
-              <View style={styles.categoriesGrid}>
-                {[
-                  { name: 'Culture', icon: '🏛️', color: '#C5A059' },
-                  { name: 'Nature', icon: '🌴', color: '#0066B2' },
-                  { name: 'Culinary', icon: '🍲', color: '#E34234' },
-                  { name: 'Events', icon: '🎭', color: '#2D2D2D' },
-                ].map((cat, i) => (
-                  <TouchableOpacity key={i} style={styles.categoryCard}>
-                    <View style={[styles.categoryIcon, { backgroundColor: cat.color + '20' }]}>
-                      <Text style={{ fontSize: 24 }}>{cat.icon}</Text>
-                    </View>
-                    <Text style={[styles.categoryName, isDarkMode && styles.textWhite]}>{cat.name}</Text>
+              {/* Browse by City Section */}
+              <View style={styles.section}>
+                <View style={styles.sectionHeader}>
+                  <Text style={[styles.sectionTitle, isDarkMode && styles.textWhite]}>Browse by City</Text>
+                  <TouchableOpacity onPress={() => setActiveTab('Cities')}>
+                    <Text style={styles.seeAll}>See All</Text>
                   </TouchableOpacity>
-                ))}
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
+                  {[
+                    { name: 'Palembang', img: 'https://images.unsplash.com/photo-1626260851893-662f392572ca?q=80&w=200' },
+                    { name: 'Pagar Alam', img: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?q=80&w=200' },
+                    { name: 'Lubuklinggau', img: 'https://images.unsplash.com/photo-1596402184320-417d717867cd?q=80&w=200' },
+                    { name: 'Lahat', img: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=200' },
+                  ].map((city, i) => (
+                    <TouchableOpacity key={i} style={styles.cityCard}>
+                      <Image source={{ uri: city.img }} style={styles.cityAvatar} />
+                      <Text style={[styles.cityName, isDarkMode && styles.textWhite]}>{city.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
               </View>
-            </View>
+
+              {/* Categories */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, isDarkMode && styles.textWhite]}>Categories</Text>
+                <View style={styles.categoriesGrid}>
+                  {[
+                    { name: 'Culture', icon: '🏛️', color: '#C5A059' },
+                    { name: 'Nature', icon: '🌴', color: '#0066B2' },
+                    { name: 'Culinary', icon: '🍲', color: '#E34234' },
+                    { name: 'Events', icon: '🎭', color: '#2D2D2D' },
+                  ].map((cat, i) => (
+                    <TouchableOpacity key={i} style={styles.categoryCard}>
+                      <View style={[styles.categoryIcon, { backgroundColor: cat.color + '15' }]}>
+                        <Text style={{ fontSize: 24 }}>{cat.icon}</Text>
+                      </View>
+                      <Text style={[styles.categoryName, isDarkMode && styles.textWhite]}>{cat.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
 
             {/* Featured Destinations */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, isDarkMode && styles.textWhite]}>Featured Destinations</Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => setActiveTab('Cities')}>
                   <Text style={styles.seeAll}>See All</Text>
                 </TouchableOpacity>
               </View>
@@ -98,11 +169,11 @@ function App() {
             <View style={{ height: 100 }} />
           </ScrollView>
         );
-      case 'Explore':
+      case 'Cities':
         return (
           <View style={[styles.centerScreen, backgroundStyle]}>
-            <Text style={[styles.screenTitle, isDarkMode && styles.textWhite]}>Explore</Text>
-            <Text style={styles.placeholderText}>Search for your next adventure</Text>
+            <Text style={[styles.screenTitle, isDarkMode && styles.textWhite]}>Cities & Regions</Text>
+            <Text style={styles.placeholderText}>Explore South Sumatra by destination</Text>
           </View>
         );
       case 'Map':
@@ -167,7 +238,7 @@ function App() {
         <View style={[styles.bottomNav, isDarkMode && styles.bottomNavDark]}>
           {[
             { name: 'Home', icon: '🏠' },
-            { name: 'Explore', icon: '🔍' },
+            { name: 'Cities', icon: '🏙️' },
             { name: 'Map', icon: '📍' },
             { name: 'Events', icon: '📅' },
           ].map((tab, i) => (
@@ -255,6 +326,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     padding: 0,
     color: '#333333',
+    textAlignVertical: 'center', // Fix for Android vertical alignment
   },
   headerRight: {
     width: 45,
@@ -305,6 +377,25 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1,
     marginBottom: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: {width: -1, height: 1},
+    textShadowRadius: 10,
+  },
+  indicatorContainer: {
+    flexDirection: 'row',
+    position: 'absolute',
+    bottom: 20,
+  },
+  indicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+    marginHorizontal: 4,
+  },
+  indicatorActive: {
+    backgroundColor: '#FFFFFF',
+    width: 20,
   },
   exploreButton: {
     backgroundColor: '#C5A059',
@@ -354,8 +445,27 @@ const styles = StyleSheet.create({
   },
   categoryName: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700', // Increased font weight for consistency
     color: '#666666',
+  },
+  cityCard: {
+    alignItems: 'center',
+    marginRight: 20,
+    width: 85,
+  },
+  cityAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#EEEEEE',
+  },
+  cityName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#333333',
+    textAlign: 'center',
   },
   horizontalScroll: {
     marginHorizontal: -16,
