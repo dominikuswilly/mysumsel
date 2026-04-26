@@ -110,13 +110,13 @@ function App() {
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                   {[
-                    { name: 'Palembang', img: 'https://images.unsplash.com/photo-1626260851893-662f392572ca?q=80&w=200' },
-                    { name: 'Pagar Alam', img: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?q=80&w=200' },
-                    { name: 'Lubuklinggau', img: 'https://images.unsplash.com/photo-1596402184320-417d717867cd?q=80&w=200' },
-                    { name: 'Lahat', img: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?q=80&w=200' },
+                    { name: 'Palembang', img: require('./src/assets/city1.png') },
+                    { name: 'Pagar Alam', img: require('./src/assets/city2.png') },
+                    { name: 'Lubuklinggau', img: require('./src/assets/city3.png') },
+                    { name: 'Lahat', img: require('./src/assets/city4.png') },
                   ].map((city, i) => (
                     <TouchableOpacity key={i} style={styles.cityCard}>
-                      <Image source={{ uri: city.img }} style={styles.cityAvatar} />
+                      <Image source={city.img} style={styles.cityAvatar} />
                       <Text style={[styles.cityName, isDarkMode && styles.textWhite]}>{city.name}</Text>
                     </TouchableOpacity>
                   ))}
@@ -153,11 +153,11 @@ function App() {
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                 {[
-                  { title: 'Ampera Bridge', location: 'Palembang', img: 'https://images.unsplash.com/photo-1626260851893-662f392572ca?q=80&w=400' },
-                  { title: 'Mount Dempo', location: 'Pagar Alam', img: 'https://images.unsplash.com/photo-1589182373726-e4f658ab50f0?q=80&w=400' },
+                  { title: 'Ampera Bridge', location: 'Palembang', img: require('./src/assets/feat1.png') },
+                  { title: 'Mount Dempo', location: 'Pagar Alam', img: require('./src/assets/feat2.png') },
                 ].map((item, i) => (
                   <TouchableOpacity key={i} style={styles.featuredCard}>
-                    <Image source={{ uri: item.img }} style={styles.featuredImage} />
+                    <Image source={item.img} style={styles.featuredImage} />
                     <View style={styles.cardInfo}>
                       <Text style={styles.cardTitle}>{item.title}</Text>
                       <Text style={styles.cardLocation}>{item.location}</Text>
