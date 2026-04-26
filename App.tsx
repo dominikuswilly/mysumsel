@@ -9,6 +9,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  TextInput,
 } from 'react-native';
 import {
   SafeAreaProvider,
@@ -20,6 +21,7 @@ const { width } = Dimensions.get('window');
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
   const [activeTab, setActiveTab] = React.useState('Home');
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#121212' : '#F8F9FA',
@@ -141,12 +143,17 @@ function App() {
               resizeMode="contain"
             />
           </View>
-          <TouchableOpacity 
-            style={[styles.searchBar, isDarkMode && styles.searchBarDark]}
-            onPress={() => setActiveTab('Explore')}>
+          <View style={[styles.searchBar, isDarkMode && styles.searchBarDark]}>
             <Text style={styles.searchIconEmoji}>🔍</Text>
-            <Text style={styles.searchPlaceholder}>Search destinations...</Text>
-          </TouchableOpacity>
+            <TextInput
+              style={[styles.searchInput, isDarkMode && styles.textWhite]}
+              placeholder="Search destinations..."
+              placeholderTextColor="#888888"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+            />
+          </View>
           <TouchableOpacity style={styles.headerRight}>
             <View style={styles.profileCircle}>
               <Text style={styles.profileEmoji}>👤</Text>
@@ -241,6 +248,13 @@ const styles = StyleSheet.create({
   searchPlaceholder: {
     color: '#888888',
     fontSize: 14,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 14,
+    padding: 0,
+    color: '#333333',
   },
   headerRight: {
     width: 45,
