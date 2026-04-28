@@ -82,6 +82,21 @@ You've successfully run and modified your React Native App. :partying_face:
 - If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
 - If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
 
+## Step 4: Production Build
+
+To generate a release build for Android, you first need to generate a signing key. Run the following command from the root of your project:
+
+```sh
+keytool -genkey -v -keystore android/app/mysumsel-release.keystore -alias mysumsel-alias -keyalg RSA -keysize 2048 -validity 10000 -storepass mysumsel123 -keypass jagainoke -dname "CN=MySumsel, OU=Dev, O=MySumsel, L=Palembang, S=South Sumatra, C=ID"
+```
+
+Once you have generated the keystore, you can build the release AAB or APK:
+
+```sh
+cd android && ./gradlew bundleRelease # For AAB
+cd android && ./gradlew assembleRelease # For APK
+```
+
 # Troubleshooting
 
 If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
