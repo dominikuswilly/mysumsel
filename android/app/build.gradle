@@ -88,8 +88,8 @@ android {
         applicationId "com.mysumsel"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "1.0.4"
+        versionCode 6
+        versionName "1.0.5"
     }
 
     splits {
@@ -104,9 +104,9 @@ android {
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
-            storePassword 'android'
+            storePassword 'jagainoke'
             keyAlias 'androiddebugkey'
-            keyPassword 'android'
+            keyPassword 'jagainoke'
         }
         release {
             // Load secrets from secret.properties
