@@ -20,6 +20,7 @@ import {
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
 import CitiesScreen from './src/screens/CitiesScreen';
+import MapScreen from './src/screens/MapScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -257,14 +258,7 @@ function App() {
       case 'Cities':
         return <CitiesScreen isDarkMode={isDarkMode} />;
       case 'Map':
-        return (
-          <View style={[styles.centerScreen, backgroundStyle]}>
-            <Text style={[styles.screenTitle, isDarkMode && styles.textWhite]}>Interactive Map</Text>
-            <View style={styles.mapPlaceholder}>
-              <Text style={styles.placeholderText}>Map View Integration Coming Soon</Text>
-            </View>
-          </View>
-        );
+        return <MapScreen isDarkMode={isDarkMode} />;
       case 'Events':
         return (
           <View style={[styles.centerScreen, backgroundStyle]}>
