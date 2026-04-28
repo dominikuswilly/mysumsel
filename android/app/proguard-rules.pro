@@ -8,3 +8,35 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+
+# React Native
+-keep class com.facebook.react.bridge.CatalystInstanceImpl { *; }
+-keep class com.facebook.react.bridge.WritableNativeMap { *; }
+-keep class com.facebook.react.bridge.WritableNativeArray { *; }
+-keep class com.facebook.react.bridge.ReadableNativeMap { *; }
+-keep class com.facebook.react.bridge.ReadableNativeArray { *; }
+-keep class com.facebook.react.bridge.NativeModule { *; }
+-keep class com.facebook.react.bridge.JavaScriptModule { *; }
+-keep class com.facebook.react.bridge.BaseJavaModule { *; }
+-keep class com.facebook.react.uimanager.ViewGroupManager { *; }
+-keep class com.facebook.react.uimanager.ViewManager { *; }
+-keep class com.facebook.react.uimanager.annotations.ReactProperty { *; }
+-keep class com.facebook.react.uimanager.annotations.ReactPropGroup { *; }
+-keep class com.facebook.react.uimanager.ReactShadowNode { *; }
+-keep class com.facebook.react.uimanager.ReactShadowNodeImpl { *; }
+
+# OkHttp
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+
+# Okio
+-keep class okio.** { *; }
+-dontwarn okio.**
+
+# Hermes
+-keep class com.facebook.hermes.unicode.** { *; }
+-keep class com.facebook.jni.** { *; }
+
