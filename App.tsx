@@ -12,6 +12,7 @@ import {
   TextInput,
   Animated,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import {
   SafeAreaProvider,
@@ -29,57 +30,52 @@ function App() {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [cities, setCities] = React.useState<any[]>([]);
   const [destinations, setDestinations] = React.useState<any[]>([]);
-
-  React.useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/cities?page=1&limit=5');
-        const json = await response.json();
-        if (json.status === 'success') {
-          setCities(json.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching cities:', error);
-      }
-    };
-
-    fetchCities();
-  }, []);
-
-  React.useEffect(() => {
-    const fetchDestinations = async () => {
-      try {
-        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/destinations/favorites');
-        const json = await response.json();
-        if (json.status === 'success') {
-          setDestinations(json.data);
-        }
-      } catch (error) {
-        console.error('Error fetching destinations:', error);
-      }
-    };
-    fetchDestinations();
-  }, []);
-  
-  // Carousel Logic
+  const [heroImages, setHeroImages] = React.useState<any[]>([]);
   const [heroIndex, setHeroIndex] = React.useState(0);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
-  
-  const [heroImages, setHeroImages] = React.useState<any[]>([]);
+  const [isImageLoading, setIsImageLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const fetchCities = async () => {
+    try {
+      const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/cities?page=1&limit=5');
+      const json = await response.json();
+      if (json.status === 'success') {
+        setCities(json.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+    }
+  };
+
+  const fetchHeroes = async () => {
+    try {
+      const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/heroes');
+      const json = await response.json();
+      if (json.status === 'success') {
+        setHeroImages(json.data.map((item: any) => ({ uri: item.image_url })));
+      }
+    } catch (error) {
+      console.error('Error fetching heroes:', error);
+    }
+  };
+
+  const fetchDestinations = async () => {
+    try {
+      const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/destinations/favorites');
+      const json = await response.json();
+      if (json.status === 'success') {
+        setDestinations(json.data);
+      }
+    } catch (error) {
+      console.error('Error fetching destinations:', error);
+    }
+  };
 
   React.useEffect(() => {
-    const fetchHeroes = async () => {
-      try {
-        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/heroes');
-        const json = await response.json();
-        if (json.status === 'success') {
-          setHeroImages(json.data.map((item: any) => ({ uri: item.image_url })));
-        }
-      } catch (error) {
-        console.error('Error fetching heroes:', error);
-      }
-    };
+    fetchCities();
     fetchHeroes();
+    fetchDestinations();
   }, []);
 
   React.useEffect(() => {
@@ -102,7 +98,20 @@ function App() {
     return () => clearInterval(timer);
   }, [fadeAnim, heroImages.length]);
 
-  const [isImageLoading, setIsImageLoading] = React.useState(true);
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchCities(),
+        fetchHeroes(),
+        fetchDestinations(),
+      ]);
+    } catch (error) {
+      console.error('Refresh error:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
   React.useEffect(() => {
     if (heroImages.length > 0) {
@@ -122,7 +131,15 @@ function App() {
           <ScrollView
             contentInsetAdjustmentBehavior="automatic"
             style={backgroundStyle}
-            showsVerticalScrollIndicator={false}>
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#C5A059"
+                colors={["#C5A059"]}
+              />
+            }>
             
             {/* Hero Section Carousel */}
             <View style={styles.heroContainer}>
