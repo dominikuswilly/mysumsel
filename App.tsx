@@ -18,6 +18,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import CitiesScreen from './src/screens/CitiesScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -237,12 +238,7 @@ function App() {
           </ScrollView>
         );
       case 'Cities':
-        return (
-          <View style={[styles.centerScreen, backgroundStyle]}>
-            <Text style={[styles.screenTitle, isDarkMode && styles.textWhite]}>Cities & Regions</Text>
-            <Text style={styles.placeholderText}>Explore South Sumatra by destination</Text>
-          </View>
-        );
+        return <CitiesScreen isDarkMode={isDarkMode} />;
       case 'Map':
         return (
           <View style={[styles.centerScreen, backgroundStyle]}>
