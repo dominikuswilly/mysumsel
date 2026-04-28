@@ -11,6 +11,7 @@ import {
   Dimensions,
   TextInput,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import {
   SafeAreaProvider,
@@ -19,7 +20,6 @@ import {
 } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
-const FALLBACK_IMAGE = require('./src/assets/hero5.png');
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -48,9 +48,7 @@ function App() {
   const [heroIndex, setHeroIndex] = React.useState(0);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   
-  const [heroImages, setHeroImages] = React.useState<any[]>([
-    FALLBACK_IMAGE,
-  ]);
+  const [heroImages, setHeroImages] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const fetchHeroes = async () => {
@@ -87,10 +85,12 @@ function App() {
     return () => clearInterval(timer);
   }, [fadeAnim, heroImages.length]);
 
-  const [heroImageError, setHeroImageError] = React.useState(false);
+  const [isImageLoading, setIsImageLoading] = React.useState(true);
 
   React.useEffect(() => {
-    setHeroImageError(false);
+    if (heroImages.length > 0) {
+      setIsImageLoading(true);
+    }
   }, [heroIndex]);
 
   const backgroundStyle = {
@@ -109,12 +109,25 @@ function App() {
             
             {/* Hero Section Carousel */}
             <View style={styles.heroContainer}>
-              <Animated.Image
-                source={heroImageError ? FALLBACK_IMAGE : heroImages[heroIndex]}
-                onError={() => setHeroImageError(true)}
-                defaultSource={FALLBACK_IMAGE}
-                style={[styles.heroImage, { opacity: fadeAnim }]}
-              />
+                {heroImages.length > 0 ? (
+                  <>
+                    <Animated.Image
+                      source={heroImages[heroIndex]}
+                      onLoadStart={() => setIsImageLoading(true)}
+                      onLoadEnd={() => setIsImageLoading(false)}
+                      style={[styles.heroImage, { opacity: fadeAnim }]}
+                    />
+                    {isImageLoading && (
+                      <View style={styles.heroLoader}>
+                        <ActivityIndicator size="large" color="#C5A059" />
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <View style={styles.heroLoader}>
+                    <ActivityIndicator size="large" color="#C5A059" />
+                  </View>
+                )}
               <View style={styles.heroOverlay}>
                 <Text style={styles.heroTitle}>Discover the Magic of</Text>
                 <Text style={styles.heroSubtitle}>SOUTH SUMATRA</Text>
@@ -389,11 +402,18 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   heroContainer: {
-    height: 300,
+    height: 250,
     position: 'relative',
     margin: 16,
     borderRadius: 20,
     overflow: 'hidden',
+    backgroundColor: '#000',
+  },
+  heroLoader: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.1)',
   },
   heroImage: {
     width: '100%',
