@@ -19,6 +19,7 @@ import {
 } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
+const FALLBACK_IMAGE = require('./src/assets/hero5.png');
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -30,7 +31,7 @@ function App() {
   React.useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/api/mysumselapi/v1/cities?page=1&limit=5');
+        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/cities?page=1&limit=5');
         const json = await response.json();
         if (json.status === 'success') {
           setCities(json.data.data);
@@ -47,13 +48,28 @@ function App() {
   const [heroIndex, setHeroIndex] = React.useState(0);
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   
-  const heroImages = [
-    require('./src/assets/hero5.png'), // Ampera Night
-    require('./src/assets/hero1.png'), // Birds
-    require('./src/assets/hero2.png'), // Quran
-    require('./src/assets/hero3.png'), // Cave
-    require('./src/assets/hero4.png'), // Mount Dempo
-  ];
+  const [heroImages, setHeroImages] = React.useState<any[]>([
+    FALLBACK_IMAGE, // Fallback
+    require('./src/assets/hero1.png'),
+    require('./src/assets/hero2.png'),
+    require('./src/assets/hero3.png'),
+    require('./src/assets/hero4.png'),
+  ]);
+
+  React.useEffect(() => {
+    const fetchHeroes = async () => {
+      try {
+        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/heroes');
+        const json = await response.json();
+        if (json.status === 'success') {
+          setHeroImages(json.data.map((item: any) => ({ uri: item.image_url })));
+        }
+      } catch (error) {
+        console.error('Error fetching heroes:', error);
+      }
+    };
+    fetchHeroes();
+  }, []);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -75,6 +91,12 @@ function App() {
     return () => clearInterval(timer);
   }, [fadeAnim, heroImages.length]);
 
+  const [heroImageError, setHeroImageError] = React.useState(false);
+
+  React.useEffect(() => {
+    setHeroImageError(false);
+  }, [heroIndex]);
+
   const backgroundStyle = {
     backgroundColor: isDarkMode ? '#121212' : '#F8F9FA',
     flex: 1,
@@ -92,7 +114,9 @@ function App() {
             {/* Hero Section Carousel */}
             <View style={styles.heroContainer}>
               <Animated.Image
-                source={heroImages[heroIndex]}
+                source={heroImageError ? FALLBACK_IMAGE : heroImages[heroIndex]}
+                onError={() => setHeroImageError(true)}
+                defaultSource={FALLBACK_IMAGE}
                 style={[styles.heroImage, { opacity: fadeAnim }]}
               />
               <View style={styles.heroOverlay}>
