@@ -27,6 +27,7 @@ function App() {
   const [activeTab, setActiveTab] = React.useState('Home');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [cities, setCities] = React.useState<any[]>([]);
+  const [destinations, setDestinations] = React.useState<any[]>([]);
 
   React.useEffect(() => {
     const fetchCities = async () => {
@@ -42,6 +43,21 @@ function App() {
     };
 
     fetchCities();
+  }, []);
+
+  React.useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/mysumsel/api/v1/destinations/favorites');
+        const json = await response.json();
+        if (json.status === 'success') {
+          setDestinations(json.data);
+        }
+      } catch (error) {
+        console.error('Error fetching destinations:', error);
+      }
+    };
+    fetchDestinations();
   }, []);
   
   // Carousel Logic
@@ -157,7 +173,7 @@ function App() {
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle, isDarkMode && styles.textWhite]}>Browse by City</Text>
                   <TouchableOpacity onPress={() => setActiveTab('Cities')}>
-                    <Text style={styles.seeAll}>See All</Text>
+                    <Text style={[styles.seeAll, isDarkMode && { color: '#66B2FF' }]}>See All</Text>
                   </TouchableOpacity>
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
@@ -195,19 +211,23 @@ function App() {
               <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, isDarkMode && styles.textWhite]}>Featured Destinations</Text>
                 <TouchableOpacity onPress={() => setActiveTab('Cities')}>
-                  <Text style={styles.seeAll}>See All</Text>
+                  <Text style={[styles.seeAll, isDarkMode && { color: '#66B2FF' }]}>See All</Text>
                 </TouchableOpacity>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                {[
-                  { title: 'Ampera Bridge', location: 'Palembang', img: require('./src/assets/feat1.png') },
-                  { title: 'Mount Dempo', location: 'Pagar Alam', img: require('./src/assets/feat2.png') },
-                ].map((item, i) => (
-                  <TouchableOpacity key={i} style={styles.featuredCard}>
-                    <Image source={item.img} style={styles.featuredImage} />
+                {destinations.map((item) => (
+                  <TouchableOpacity key={item.id} style={[styles.featuredCard, isDarkMode && styles.bgDarkCard]}>
+                    <Image source={{ uri: item.image_url }} style={styles.featuredImage} />
                     <View style={styles.cardInfo}>
-                      <Text style={styles.cardTitle}>{item.title}</Text>
-                      <Text style={styles.cardLocation}>{item.location}</Text>
+                      <Text style={[styles.cardTitle, isDarkMode && styles.textWhite]} numberOfLines={1}>{item.name}</Text>
+                      <Text style={[styles.cardLocation, isDarkMode && styles.textMuted]}>{item.location}</Text>
+                      <View style={styles.categoryContainer}>
+                        {item.categories.slice(0, 2).map((cat: any) => (
+                          <View key={cat.id} style={[styles.categoryBadge, isDarkMode && styles.bgDarkBadge]}>
+                            <Text style={[styles.categoryText, isDarkMode && styles.textWhite]}>{cat.name}</Text>
+                          </View>
+                        ))}
+                      </View>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -557,6 +577,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#333333',
   },
+  categoryContainer: {
+    flexDirection: 'row',
+    marginTop: 8,
+    flexWrap: 'wrap',
+  },
+  categoryBadge: {
+    backgroundColor: '#F1F3F5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginRight: 6,
+    marginBottom: 4,
+  },
+  categoryText: {
+    fontSize: 10,
+    color: '#666666',
+    fontWeight: '600',
+  },
   cardLocation: {
     fontSize: 12,
     color: '#888888',
@@ -639,6 +677,17 @@ const styles = StyleSheet.create({
   },
   textWhite: {
     color: '#FFFFFF',
+  },
+  textMuted: {
+    color: '#A0A0A0',
+  },
+  bgDarkCard: {
+    backgroundColor: '#1E1E1E',
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+  },
+  bgDarkBadge: {
+    backgroundColor: '#333333',
   },
 });
 
