@@ -25,6 +25,23 @@ function App() {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = React.useState('Home');
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [cities, setCities] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await fetch('https://apinofudev.bengkelfajarjaya.com/api/mysumselapi/v1/cities?page=1&limit=5');
+        const json = await response.json();
+        if (json.status === 'success') {
+          setCities(json.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+      }
+    };
+
+    fetchCities();
+  }, []);
   
   // Carousel Logic
   const [heroIndex, setHeroIndex] = React.useState(0);
@@ -111,15 +128,10 @@ function App() {
                   </TouchableOpacity>
                 </View>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-                  {[
-                    { name: 'Palembang', img: require('./src/assets/city1.png') },
-                    { name: 'Pagar Alam', img: require('./src/assets/city2.png') },
-                    { name: 'Lubuklinggau', img: require('./src/assets/city3.png') },
-                    { name: 'Lahat', img: require('./src/assets/city4.png') },
-                  ].map((city, i) => (
-                    <TouchableOpacity key={i} style={styles.cityCard}>
-                      <Image source={city.img} style={styles.cityAvatar} />
-                      <Text style={[styles.cityName, isDarkMode && styles.textWhite]}>{city.name}</Text>
+                  {cities.map((city) => (
+                    <TouchableOpacity key={city.id} style={styles.cityCard}>
+                      <Image source={{ uri: city.image_url }} style={styles.cityAvatar} />
+                      <Text style={[styles.cityName, isDarkMode && styles.textWhite]} numberOfLines={1}>{city.name.replace('Kota ', '').replace('Kabupaten ', '')}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
