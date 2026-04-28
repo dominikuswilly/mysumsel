@@ -49,11 +49,7 @@ function App() {
   const fadeAnim = React.useRef(new Animated.Value(1)).current;
   
   const [heroImages, setHeroImages] = React.useState<any[]>([
-    FALLBACK_IMAGE, // Fallback
-    require('./src/assets/hero1.png'),
-    require('./src/assets/hero2.png'),
-    require('./src/assets/hero3.png'),
-    require('./src/assets/hero4.png'),
+    FALLBACK_IMAGE,
   ]);
 
   React.useEffect(() => {
