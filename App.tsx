@@ -21,6 +21,7 @@ import {
 } from 'react-native-safe-area-context';
 import CitiesScreen from './src/screens/CitiesScreen';
 import MapScreen from './src/screens/MapScreen';
+import KTPScannerScreen from './src/screens/KTPScannerScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -259,6 +260,8 @@ function App() {
         return <CitiesScreen isDarkMode={isDarkMode} />;
       case 'Map':
         return <MapScreen isDarkMode={isDarkMode} />;
+      case 'Scan':
+        return <KTPScannerScreen isDarkMode={isDarkMode} />;
       case 'Events':
         return (
           <View style={[styles.centerScreen, backgroundStyle]}>
@@ -279,71 +282,87 @@ function App() {
         translucent
       />
       <SafeAreaView style={backgroundStyle} edges={['top', 'left', 'right']}>
-        {/* Premium Header */}
-        <View style={[styles.header, isDarkMode && styles.headerDark]}>
-          <View style={styles.headerLeft}>
-            <Image
-              source={require('./src/assets/logo_icon.png')}
-              style={styles.logoIcon}
-              resizeMode="contain"
-            />
-          </View>
-          <View style={[styles.searchBar, isDarkMode && styles.searchBarDark]}>
-            <Text style={styles.searchIconEmoji}>🔍</Text>
-            <TextInput
-              style={[styles.searchInput, isDarkMode && styles.textWhite]}
-              placeholder="Search destinations..."
-              placeholderTextColor="#888888"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              returnKeyType="search"
-            />
-          </View>
-          <TouchableOpacity style={styles.headerRight}>
-            <View style={styles.profileCircle}>
-              <Text style={styles.profileEmoji}>👤</Text>
+        {/* Top Header */}
+        {activeTab !== 'Scan' && (
+          <View style={[styles.header, isDarkMode && styles.headerDark]}>
+            <View style={styles.headerLeft}>
+              <Image
+                source={require('./src/assets/logo_icon.png')}
+                style={styles.logoIcon}
+                resizeMode="contain"
+              />
             </View>
-          </TouchableOpacity>
-        </View>
+            <View style={[styles.searchBar, isDarkMode && styles.searchBarDark]}>
+              <Text style={styles.searchIconEmoji}>🔍</Text>
+              <TextInput
+                style={[styles.searchInput, isDarkMode && styles.textWhite]}
+                placeholder="Search destinations..."
+                placeholderTextColor="#888888"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+              />
+            </View>
+            <TouchableOpacity style={styles.headerRight}>
+              <View style={styles.profileCircle}>
+                <Text style={styles.profileEmoji}>👤</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {renderContent()}
 
         {/* Bottom Navigation */}
-        <View style={[
-          styles.bottomNav, 
-          isDarkMode && styles.bottomNavDark,
-          { 
-            height: 60 + (insets.bottom > 0 ? insets.bottom : 15), 
-            paddingBottom: insets.bottom > 0 ? insets.bottom : 5 
-          }
-        ]}>
-          {[
-            { name: 'Home', icon: '🏠' },
-            { name: 'Cities', icon: '🏙️' },
-            { name: 'Map', icon: '📍' },
-            { name: 'Events', icon: '📅' },
-          ].map((tab, i) => (
-            <TouchableOpacity
-              key={i}
-              style={styles.navItem}
-              onPress={() => setActiveTab(tab.name)}>
-              <Text style={[
-                styles.navIcon,
-                activeTab === tab.name && styles.navIconActive
-              ]}>
-                {tab.icon}
-              </Text>
-              <Text style={[
-                styles.navLabel,
-                isDarkMode && styles.textWhite,
-                activeTab === tab.name && styles.navLabelActive
-              ]}>
-                {tab.name}
-              </Text>
-              {activeTab === tab.name && <View style={styles.activeIndicator} />}
-            </TouchableOpacity>
-          ))}
-        </View>
+        {activeTab !== 'Scan' && (
+          <View style={[
+            styles.bottomNav, 
+            isDarkMode && styles.bottomNavDark,
+            { 
+              height: 60 + (insets.bottom > 0 ? insets.bottom : 15), 
+              paddingBottom: insets.bottom > 0 ? insets.bottom : 5 
+            }
+          ]}>
+            {[
+              { name: 'Home', icon: '🏠' },
+              { name: 'Cities', icon: '🏙️' },
+              { name: 'Scan', icon: '📷' },
+              { name: 'Map', icon: '📍' },
+              { name: 'Events', icon: '📅' },
+            ].map((tab, i) => (
+              <TouchableOpacity
+                key={i}
+                style={[
+                  styles.navItem,
+                  tab.name === 'Scan' && styles.navItemScan
+                ]}
+                onPress={() => setActiveTab(tab.name)}>
+                <View style={[
+                  tab.name === 'Scan' && styles.scanIconWrapper,
+                  activeTab === tab.name && tab.name === 'Scan' && styles.scanIconWrapperActive
+                ]}>
+                  <Text style={[
+                    styles.navIcon,
+                    activeTab === tab.name && styles.navIconActive,
+                    tab.name === 'Scan' && styles.scanIcon
+                  ]}>
+                    {tab.icon}
+                  </Text>
+                </View>
+                {tab.name !== 'Scan' && (
+                  <Text style={[
+                    styles.navLabel,
+                    isDarkMode && styles.textWhite,
+                    activeTab === tab.name && styles.navLabelActive
+                  ]}>
+                    {tab.name}
+                  </Text>
+                )}
+                {activeTab === tab.name && tab.name !== 'Scan' && <View style={styles.activeIndicator} />}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </SafeAreaView>
     </View>
   );
@@ -655,6 +674,32 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: '#C5A059',
     marginTop: 4,
+  },
+  navItemScan: {
+    marginTop: -30,
+  },
+  scanIconWrapper: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#C5A059',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#C5A059',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+  },
+  scanIconWrapperActive: {
+    backgroundColor: '#0066B2',
+    shadowColor: '#0066B2',
+  },
+  scanIcon: {
+    fontSize: 28,
+    opacity: 1,
   },
   centerScreen: {
     flex: 1,
