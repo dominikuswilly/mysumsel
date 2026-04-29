@@ -18,14 +18,19 @@ import ImageEditor from '@react-native-community/image-editor';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-// KTP Layout Constants
-const KTP_FRAME_WIDTH = 600;
-const KTP_FRAME_HEIGHT = 380;
+// KTP Layout Constants (Responsive)
+const CAMERA_AREA_WIDTH = 0.82 * SCREEN_HEIGHT;
+const CAMERA_AREA_HEIGHT = SCREEN_WIDTH;
+
+// Use 85% of available width to ensure it fits comfortably
+const KTP_FRAME_WIDTH = CAMERA_AREA_WIDTH * 0.85;
+const KTP_FRAME_HEIGHT = KTP_FRAME_WIDTH / 1.586; // Standard ID-1 aspect ratio
+
 const KTP_MARKER_INSET = {
-  top: 15,
-  left: 80,
-  right: 15,
-  bottom: 30,
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
 };
 
 interface KTPScannerScreenProps {
@@ -87,13 +92,20 @@ export default function KTPScannerScreen({ isDarkMode }: KTPScannerScreenProps) 
         const markerWidthUI = KTP_FRAME_WIDTH - KTP_MARKER_INSET.left - KTP_MARKER_INSET.right;
         const markerHeightUI = KTP_FRAME_HEIGHT - KTP_MARKER_INSET.top - KTP_MARKER_INSET.bottom;
 
-        // The camera is absoluteFill (covers the whole SCREEN_HEIGHT x SCREEN_WIDTH space)
-        // Even though cameraArea is only 82% wide, the camera background is 100% wide.
-        const frameOffsetX = (0.82 * SCREEN_HEIGHT - KTP_FRAME_WIDTH) / 2;
-        const frameOffsetY = (SCREEN_WIDTH - KTP_FRAME_HEIGHT) / 2;
+        const frameOffsetX = (CAMERA_AREA_WIDTH - KTP_FRAME_WIDTH) / 2;
+        const frameOffsetY = (CAMERA_AREA_HEIGHT - KTP_FRAME_HEIGHT) / 2;
 
         const totalOffsetXUI = frameOffsetX + KTP_MARKER_INSET.left;
         const totalOffsetYUI = frameOffsetY + KTP_MARKER_INSET.top;
+
+        console.log('--- Debug UI Coordinates ---');
+        console.log('frameOffsetX:', frameOffsetX);
+        console.log('frameOffsetY:', frameOffsetY);
+        console.log('cardMarker Absolute X:', totalOffsetXUI);
+        console.log('cardMarker Absolute Y:', totalOffsetYUI);
+        console.log('cardMarker Width:', markerWidthUI);
+        console.log('cardMarker Height:', markerHeightUI);
+        console.log('----------------------------');
 
         // Normalize relative to full screen (not just cameraArea)
         const nx = totalOffsetXUI / SCREEN_HEIGHT;
@@ -213,11 +225,6 @@ export default function KTPScannerScreen({ isDarkMode }: KTPScannerScreenProps) 
               <View style={[styles.corner, styles.topLeft, { borderColor: isReady ? '#4CAF50' : '#FFFFFF' }]} />
               <View style={[styles.corner, styles.topRight, { borderColor: isReady ? '#4CAF50' : '#FFFFFF' }]} />
               <View style={[styles.corner, styles.bottomLeft, { borderColor: isReady ? '#4CAF50' : '#FFFFFF' }]} />
-              {/* Main Card Marker */}
-              <View style={[
-                styles.cardMarker, 
-                { borderColor: getMarkerColor('card'), borderStyle: getBorderStyle('card') }
-              ]} />
 
               {/* 3. Face Icon Guide */}
               <View style={[
@@ -359,19 +366,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 25,
   },
-  cardMarker: {
-    position: 'absolute',
-    top: KTP_MARKER_INSET.top,
-    left: KTP_MARKER_INSET.left,
-    right: KTP_MARKER_INSET.right,
-    bottom: KTP_MARKER_INSET.bottom,
-    borderWidth: 5,
-    borderRadius: 20
-  },
   faceMarker: {
     position: 'absolute',
-    top: 90,
-    right: 40,
+    top: 70,
+    right: 35,
     width: 120,
     height: 150,
     borderWidth: 2,
