@@ -8,19 +8,35 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
+  Alert,
+  PermissionsAndroid,
+  Platform,
 } from 'react-native';
 import { Camera } from 'react-native-camera-kit';
+import { CameraRoll } from '@react-native-camera-roll/camera-roll';
+import ImageEditor from '@react-native-community/image-editor';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// KTP Layout Constants
+const KTP_FRAME_WIDTH = 600;
+const KTP_FRAME_HEIGHT = 380;
+const KTP_MARKER_INSET = {
+  top: 15,
+  left: 80,
+  right: 15,
+  bottom: 30,
+};
 
 interface KTPScannerScreenProps {
   isDarkMode: boolean;
 }
 
-const KTPScannerScreen: React.FC<KTPScannerScreenProps> = ({ isDarkMode }) => {
+export default function KTPScannerScreen({ isDarkMode }: KTPScannerScreenProps) {
   const cameraRef = useRef<any>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   
-  // Track detection state for each marker
   const [detected, setDetected] = useState({
     card: false,
     face: false,
@@ -28,13 +44,133 @@ const KTPScannerScreen: React.FC<KTPScannerScreenProps> = ({ isDarkMode }) => {
 
   const isReady = detected.card && detected.face;
 
+  const requestPermissions = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const permissions = [PermissionsAndroid.PERMISSIONS.CAMERA];
+        if (Platform.Version >= 33) {
+          permissions.push(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+        } else {
+          permissions.push(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
+        }
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        return Object.values(granted).every(status => status === PermissionsAndroid.RESULTS.GRANTED);
+      } catch (err) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   const takePicture = async () => {
+    if (isCapturing) return;
+    
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      Alert.alert('Permission Error', 'Camera and Gallery access is required.');
+      return;
+    }
+
+    setIsCapturing(true);
+
     if (cameraRef.current) {
       try {
         const image = await cameraRef.current.capture();
-        console.log('Image captured:', image.uri);
+        
+
+
+        // --- Precision Crop Logic (Screen-to-Sensor Mapping) ---
+        const imgWidth = image.width || SCREEN_WIDTH;
+        const imgHeight = image.height || SCREEN_HEIGHT;
+
+        // UI Dimensions for calculations
+        const markerWidthUI = KTP_FRAME_WIDTH - KTP_MARKER_INSET.left - KTP_MARKER_INSET.right;
+        const markerHeightUI = KTP_FRAME_HEIGHT - KTP_MARKER_INSET.top - KTP_MARKER_INSET.bottom;
+
+        // The camera is absoluteFill (covers the whole SCREEN_HEIGHT x SCREEN_WIDTH space)
+        // Even though cameraArea is only 82% wide, the camera background is 100% wide.
+        const frameOffsetX = (0.82 * SCREEN_HEIGHT - KTP_FRAME_WIDTH) / 2;
+        const frameOffsetY = (SCREEN_WIDTH - KTP_FRAME_HEIGHT) / 2;
+
+        const totalOffsetXUI = frameOffsetX + KTP_MARKER_INSET.left;
+        const totalOffsetYUI = frameOffsetY + KTP_MARKER_INSET.top;
+
+        // Normalize relative to full screen (not just cameraArea)
+        const nx = totalOffsetXUI / SCREEN_HEIGHT;
+        const ny = totalOffsetYUI / SCREEN_WIDTH;
+        const nw = markerWidthUI / SCREEN_HEIGHT;
+        const nh = markerHeightUI / SCREEN_WIDTH;
+
+        const isPortraitSensor = imgHeight > imgWidth;
+        
+        let cropData;
+        if (!isPortraitSensor) {
+          // Landscape Sensor
+          cropData = {
+            offset: { x: nx * imgWidth, y: ny * imgHeight },
+            size: { width: nw * imgWidth, height: nh * imgHeight },
+            displaySize: { width: markerWidthUI, height: markerHeightUI },
+            resizeMode: 'contain' as const,
+          };
+        } else {
+          // Portrait Sensor (Most Androids)
+          // 90deg CW: UI X -> Image Y, UI Y -> Image (imgWidth - X)
+          cropData = {
+            offset: { 
+              x: (1 - (ny + nh)) * imgWidth, 
+              y: nx * imgHeight 
+            },
+            size: { 
+              width: nh * imgWidth, 
+              height: nw * imgHeight 
+            },
+            displaySize: { width: markerHeightUI, height: markerWidthUI },
+            resizeMode: 'contain' as const,
+          };
+        }
+
+        // Apply integer rounding to prevent ImageEditor failures
+        const finalCropData = {
+          offset: { 
+            x: Math.max(0, Math.round(cropData.offset.x)), 
+            y: Math.max(0, Math.round(cropData.offset.y)) 
+          },
+          size: { 
+            width: Math.min(imgWidth, Math.round(cropData.size.width)), 
+            height: Math.min(imgHeight, Math.round(cropData.size.height)) 
+          },
+          displaySize: cropData.displaySize,
+          resizeMode: cropData.resizeMode,
+        };
+
+        console.log('Final Precision Crop Data:', finalCropData);
+
+        let finalUri = image.uri;
+        try {
+          const result = await ImageEditor.cropImage(image.uri, finalCropData);
+          finalUri = typeof result === 'object' ? result.uri : result;
+        } catch (e: any) {
+          console.warn('Crop failed:', e.message);
+        }
+
+        setPreviewUri(finalUri);
+        
+      } catch (error: any) {
+        Alert.alert('Capture Error', error.message || 'Failed to capture image');
+      } finally {
+        setIsCapturing(false);
+      }
+    }
+  };
+
+  const saveToGallery = async () => {
+    if (previewUri) {
+      try {
+        await CameraRoll.saveAsset(previewUri, { type: 'photo' });
+        Alert.alert('Success', 'KTP Image saved to gallery');
+        setPreviewUri(null);
       } catch (error) {
-        console.error('Capture error:', error);
+        Alert.alert('Error', 'Failed to save to gallery');
       }
     }
   };
@@ -131,9 +267,39 @@ const KTPScannerScreen: React.FC<KTPScannerScreenProps> = ({ isDarkMode }) => {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Review Overlay */}
+      {previewUri && (
+        <View style={styles.reviewOverlay}>
+          <View style={styles.reviewContent}>
+            <Text style={styles.reviewTitle}>REVIEW KTP</Text>
+            <View style={styles.previewContainer}>
+              <Image 
+                source={{ uri: previewUri }} 
+                style={styles.previewImage} 
+                resizeMode="contain" 
+              />
+            </View>
+            <View style={styles.reviewFooter}>
+              <TouchableOpacity 
+                style={[styles.reviewButton, styles.retakeButton]}
+                onPress={() => setPreviewUri(null)}
+              >
+                <Text style={styles.reviewButtonText}>RETAKE</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.reviewButton, styles.saveButton]}
+                onPress={saveToGallery}
+              >
+                <Text style={styles.reviewButtonText}>SAVE TO GALLERY</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -187,19 +353,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   cardFrame: {
-    width: 600, 
-    height: 380,
+    width: KTP_FRAME_WIDTH, 
+    height: KTP_FRAME_HEIGHT,
     position: 'relative',
     borderWidth: 1,
     borderRadius: 25,
   },
   cardMarker: {
     position: 'absolute',
-    top: 15,
-    left: 80,
-    right: 15,
-    bottom: 30,
-    borderWidth: 2,
+    top: KTP_MARKER_INSET.top,
+    left: KTP_MARKER_INSET.left,
+    right: KTP_MARKER_INSET.right,
+    bottom: KTP_MARKER_INSET.bottom,
+    borderWidth: 5,
     borderRadius: 20
   },
   faceMarker: {
@@ -318,6 +484,69 @@ const styles = StyleSheet.create({
   controlIcon: {
     fontSize: 20,
   },
+  reviewOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    zIndex: 1000,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reviewContent: {
+    width: '90%',
+    height: '85%',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  reviewTitle: {
+    color: '#C5A059',
+    fontSize: 16,
+    fontWeight: '900',
+    textAlign: 'center',
+    paddingVertical: 15,
+    letterSpacing: 2,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  previewContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 10,
+  },
+  reviewFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 15,
+    backgroundColor: '#111',
+  },
+  reviewButton: {
+    flex: 1,
+    height: 50,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  retakeButton: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  saveButton: {
+    backgroundColor: '#C5A059',
+  },
+  reviewButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
 });
-
-export default KTPScannerScreen;
