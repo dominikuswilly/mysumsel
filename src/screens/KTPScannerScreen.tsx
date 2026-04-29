@@ -47,6 +47,9 @@ export default function KTPScannerScreen({ isDarkMode }: KTPScannerScreenProps) 
     face: false,
   });
 
+  const [focusPoint, setFocusPoint] = useState<{ x: number, y: number } | null>(null);
+  const focusTimeout = useRef<any>(null);
+
   const isReady = detected.card && detected.face;
 
   const requestPermissions = async () => {
@@ -197,25 +200,50 @@ export default function KTPScannerScreen({ isDarkMode }: KTPScannerScreenProps) 
     return detected[markerKey] || isReady ? 'solid' : 'dashed';
   };
 
+  const handleTapToFocus = (event: any) => {
+    const { locationX, locationY } = event.nativeEvent;
+    
+    // Show focus ring
+    setFocusPoint({ x: locationX, y: locationY });
+    
+    // Clear existing timeout
+    if (focusTimeout.current) clearTimeout(focusTimeout.current);
+    
+    // Hide focus ring after 1.5s
+    focusTimeout.current = setTimeout(() => {
+      setFocusPoint(null);
+    }, 1500);
+
+    // Note: react-native-camera-kit handles the actual sensor focus 
+    // automatically when focusMode='on' is set and a tap occurs 
+    // on the component.
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar hidden />
 
       {/* Fullscreen Camera Feed (Background) */}
-      <Camera
-        ref={cameraRef}
+      <TouchableOpacity 
+        activeOpacity={1}
         style={StyleSheet.absoluteFill}
-        cameraOptions={{
-          flashMode: 'auto',
-          focusMode: 'on',
-          zoomMode: 'on',
-        }}
-      />
+        onPress={handleTapToFocus}
+      >
+        <Camera
+          ref={cameraRef}
+          style={StyleSheet.absoluteFill}
+          cameraOptions={{
+            flashMode: 'auto',
+            focusMode: 'on',
+            zoomMode: 'on',
+          }}
+        />
+      </TouchableOpacity>
       
       {/* Rotated Landscape Fullscreen UI Overlay */}
-      <View style={styles.landscapeWrapper}>
+      <View style={styles.landscapeWrapper} pointerEvents="box-none">
         {/* Marker/Guide Area (Left side in landscape) */}
-        <View style={styles.cameraArea}>
+        <View style={styles.cameraArea} pointerEvents="box-none">
           {/* Overlay Guide */}
           <View style={styles.overlay} pointerEvents="none">
             <View style={styles.unfocusedArea} />
@@ -303,6 +331,19 @@ export default function KTPScannerScreen({ isDarkMode }: KTPScannerScreenProps) 
             </View>
           </View>
         </View>
+      )}
+
+      {/* Focus Ring Indicator */}
+      {focusPoint && (
+        <View 
+          style={[
+            styles.focusRing, 
+            { 
+              top: focusPoint.y - 40, 
+              left: focusPoint.x - 40 
+            }
+          ]} 
+        />
       )}
     </View>
   );
@@ -546,5 +587,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 1,
+  },
+  focusRing: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderWidth: 2,
+    borderColor: '#00E5FF',
+    borderRadius: 40,
+    zIndex: 9999,
   },
 });
