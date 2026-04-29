@@ -22,13 +22,11 @@ const KTPScannerScreen: React.FC<KTPScannerScreenProps> = ({ isDarkMode }) => {
   
   // Track detection state for each marker
   const [detected, setDetected] = useState({
-    province: false,
-    city: false,
-    nik: false,
+    card: false,
     face: false,
   });
 
-  const isReady = detected.province && detected.city && detected.nik && detected.face;
+  const isReady = detected.card && detected.face;
 
   const takePicture = async () => {
     if (cameraRef.current) {
@@ -79,24 +77,10 @@ const KTPScannerScreen: React.FC<KTPScannerScreenProps> = ({ isDarkMode }) => {
               <View style={[styles.corner, styles.topLeft, { borderColor: isReady ? '#4CAF50' : '#FFFFFF' }]} />
               <View style={[styles.corner, styles.topRight, { borderColor: isReady ? '#4CAF50' : '#FFFFFF' }]} />
               <View style={[styles.corner, styles.bottomLeft, { borderColor: isReady ? '#4CAF50' : '#FFFFFF' }]} />
-              <View style={[styles.corner, styles.bottomRight, { borderColor: isReady ? '#4CAF50' : '#FFFFFF' }]} />
-
-              {/* 1. Header Stack (Province & City) */}
-              <View style={styles.headerStack}>
-                <View style={[
-                  styles.headerMarker, 
-                  { borderColor: getMarkerColor('province'), borderStyle: getBorderStyle('province') }
-                ]} />
-                <View style={[
-                  styles.headerMarker, 
-                  { borderColor: getMarkerColor('city'), borderStyle: getBorderStyle('city') }
-                ]} />
-              </View>
-
-              {/* 2. NIK Data Anchor (Primary Focus) */}
+              {/* Main Card Marker */}
               <View style={[
-                styles.nikMarker, 
-                { borderColor: getMarkerColor('nik'), borderStyle: getBorderStyle('nik') }
+                styles.cardMarker, 
+                { borderColor: getMarkerColor('card'), borderStyle: getBorderStyle('card') }
               ]} />
 
               {/* 3. Face Icon Guide */}
@@ -119,11 +103,9 @@ const KTPScannerScreen: React.FC<KTPScannerScreenProps> = ({ isDarkMode }) => {
             <TouchableOpacity 
               style={{ marginTop: 10, padding: 5, backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 5 }}
               onPress={() => {
-                if (!detected.province) setDetected({...detected, province: true});
-                else if (!detected.city) setDetected({...detected, city: true});
-                else if (!detected.nik) setDetected({...detected, nik: true});
+                if (!detected.card) setDetected({...detected, card: true});
                 else if (!detected.face) setDetected({...detected, face: true});
-                else setDetected({province: false, city: false, nik: false, face: false});
+                else setDetected({card: false, face: false});
               }}
             >
               <Text style={{color: '#FFF', fontSize: 10}}>Simulate Detection</Text>
@@ -211,27 +193,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 25,
   },
-  headerStack: {
+  cardMarker: {
     position: 'absolute',
-    top: 30,
-    left: '20%',
-    right: '20%',
-    height: 60,
-    justifyContent: 'space-between',
-  },
-  headerMarker: {
-    height: 15,
-    borderWidth: 1,
-    borderRadius: 4,
-  },
-  nikMarker: {
-    position: 'absolute',
-    top: 70,
-    left: 60,
-    width: 360,
-    height: 30,
-    borderWidth: 2.5,
-    borderRadius: 6,
+    top: 15,
+    left: 80,
+    right: 15,
+    bottom: 30,
+    borderWidth: 2,
+    borderRadius: 20
   },
   faceMarker: {
     position: 'absolute',
